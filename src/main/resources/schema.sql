@@ -273,7 +273,7 @@ IS
 
       UPDATE nip
       SET nip_name = nip_name_p, start_date = start_date_p, end_date = end_date_p, sdqc_frequency = sdqc_frequency_p,
-        state_id = draft_state
+        state_id   = draft_state
       WHERE nip.id = nip_id_p;
     END IF;
   END;
@@ -386,7 +386,7 @@ CREATE OR REPLACE VIEW overdue_sdqc AS
 
 -- view nip role user with insert of user/role into nip
 
-CREATE OR REPLACE VIEW user_role_nips AS
+CREATE OR REPLACE VIEW user_role_nips (nip_id, nip_name, username, user_role) AS
   SELECT
     nip.id,
     nip.nip_name,
@@ -397,6 +397,26 @@ CREATE OR REPLACE VIEW user_role_nips AS
     INNER JOIN nip_role ON nip_role_user.role_id = nip_role.id
     INNER JOIN nip_user ON nip_role_user.user_id = nip_user.id;
 
+CREATE TRIGGER add_user_to_nip_with_role
+INSTEAD OF INSERT
+  ON user_role_nips
+  DECLARE
+    user_id NUMBER;
+    role_id NUMBER;
+  BEGIN
+    SELECT id
+    INTO role_id
+    FROM NIP_ROLE
+    WHERE NIP_ROLE.role = :NEW.user_role;
+
+    SELECT id
+    INTO user_id
+    FROM NIP_USER
+    WHERE NIP_USER.name = :NEW.username;
+
+    INSERT INTO NIP_ROLE_USER (nip_id, role_id, user_id) VALUES (:NEW.nip_id, role_id, user_id);
+  END;
+/
 
 CREATE OR REPLACE VIEW nip_sdqc (id, nip_name, sdqc_id, due_date, date_performed, performed_by, document_path) AS
   SELECT
