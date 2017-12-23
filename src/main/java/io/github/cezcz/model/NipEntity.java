@@ -19,6 +19,7 @@ import java.sql.Time;
                 procedureName = "UPDATE_NIP",
                 parameters = {
                         @StoredProcedureParameter(mode = ParameterMode.IN, name = "nip_id_p", type = Integer.class),
+                        @StoredProcedureParameter(mode = ParameterMode.IN, name = "nip_name_p", type = String.class),
                         @StoredProcedureParameter(mode = ParameterMode.IN, name = "start_date_p", type = Time.class),
                         @StoredProcedureParameter(mode = ParameterMode.IN, name = "end_date_p", type = Time.class),
                         @StoredProcedureParameter(mode = ParameterMode.IN, name = "sdqcFrequency", type = String.class),

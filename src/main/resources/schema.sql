@@ -199,12 +199,15 @@ WHEN (NEW.id IS NULL OR NEW.id = 0)
   END;
 /
 
-CREATE OR REPLACE PROCEDURE INSERT_INTO_NIP(nip_name_p       IN VARCHAR, start_date_p IN DATE, end_date_p IN DATE,
-                                            sdqc_frequency_p IN INTERVAL DAY TO SECOND, nip_user_p IN NUMBER)
+CREATE OR REPLACE PROCEDURE INSERT_INTO_NIP(nip_name_p       IN VARCHAR,
+                                            start_date_p     IN DATE,
+                                            end_date_p       IN DATE,
+                                            sdqc_frequency_p IN INTERVAL DAY TO SECOND,
+                                            nip_user_p       IN NUMBER)
 IS
   current_date DATE;
   draft_state  NUMBER := 1;
-  creator      NUMBER := 4;
+  admin      NUMBER := 1;
   nip_id_p     NUMBER;
   BEGIN
     SELECT sysdate
@@ -217,14 +220,16 @@ IS
 
     INSERT INTO nip_audit_trial (nip_id, nip_name, start_date, end_date, sdqc_frequency, state_id, action_date, nip_user, nip_role)
     VALUES (nip_id_p, nip_name_p, start_date_p, end_date_p, sdqc_frequency_p, draft_state, current_date, nip_user_p,
-            creator);
+            admin);
 
     INSERT INTO nip (id, nip_name, start_date, end_date, sdqc_frequency, state_id)
     VALUES (nip_id_p, nip_name_p, start_date_p, end_date_p, sdqc_frequency_p, draft_state);
   END;
 /
 
-CREATE OR REPLACE PROCEDURE UPDATE_NIP(nip_id_p         IN NUMBER, nip_name_p IN VARCHAR, start_date_p IN DATE,
+CREATE OR REPLACE PROCEDURE UPDATE_NIP(nip_id_p         IN NUMBER,
+                                       nip_name_p       IN VARCHAR,
+                                       start_date_p     IN DATE,
                                        end_date_p       IN DATE,
                                        sdqc_frequency_p IN INTERVAL DAY TO SECOND,
                                        nip_user_p       IN NUMBER,
@@ -275,8 +280,10 @@ IS
 /
 
 
-CREATE OR REPLACE PROCEDURE UPDATE_NIP_STATE(nip_id_p      IN NUMBER, nip_user_id IN NUMBER,
-                                             new_nip_state IN NUMBER, nip_role_p IN NUMBER)
+CREATE OR REPLACE PROCEDURE UPDATE_NIP_STATE(nip_id_p      IN NUMBER,
+                                             nip_user_id   IN NUMBER,
+                                             new_nip_state IN NUMBER,
+                                             nip_role_p    IN NUMBER)
 IS
   current_date         DATE;
   current_nip_state    NUMBER;
