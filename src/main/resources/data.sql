@@ -7,3 +7,5 @@ INSERT INTO nip_state (id, nip_state) VALUES (5, 'Rejected');
 INSERT INTO nip_role (id, role) VALUES (1, 'ADMIN');
 INSERT INTO nip_role (id, role) VALUES (2, 'USER');
 INSERT INTO nip_role (id, role) VALUES (3, 'APPROVER');
+
+INSERT INTO nip_user (NAME, PASSWORD, ROLE) VALUES ('cez', 'cez', 'role_admin');

@@ -199,7 +199,7 @@ WHEN (NEW.id IS NULL OR NEW.id = 0)
   END;
 /
 
-CREATE OR REPLACE PROCEDURE INSERT_INTO_NIP(nip_name_p       IN VARCHAR,
+CREATE OR REPLACE PROCEDURE INSERT_INTO_NIP(nip_name_p       IN VARCHAR, --- Create NIP
                                             start_date_p     IN DATE,
                                             end_date_p       IN DATE,
                                             sdqc_frequency_p IN INTERVAL DAY TO SECOND,
@@ -207,7 +207,7 @@ CREATE OR REPLACE PROCEDURE INSERT_INTO_NIP(nip_name_p       IN VARCHAR,
 IS
   current_date DATE;
   draft_state  NUMBER := 1;
-  admin      NUMBER := 1;
+  admin        NUMBER := 1;
   nip_id_p     NUMBER;
   BEGIN
     SELECT sysdate
@@ -273,7 +273,7 @@ IS
 
       UPDATE nip
       SET nip_name = nip_name_p, start_date = start_date_p, end_date = end_date_p, sdqc_frequency = sdqc_frequency_p,
-        state_id   = draft_state
+        state_id = draft_state
       WHERE nip.id = nip_id_p;
     END IF;
   END;

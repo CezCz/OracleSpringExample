@@ -7,5 +7,5 @@ import java.util.List;
 
 public interface UserRoleNipsRepository extends JpaRepository<UserRoleNipsEntity, Integer> {
 
-    List<UserRoleNipsEntity> findByNipIdAndUserId(Integer nipId, Integer userId);
+//    List<UserRoleNipsEntity> findByNip__idAndUser__id(Integer nipId, Integer userId);
 }
