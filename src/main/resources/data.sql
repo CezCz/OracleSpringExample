@@ -8,4 +8,4 @@ INSERT INTO nip_role (id, role) VALUES (1, 'ADMIN');
 INSERT INTO nip_role (id, role) VALUES (2, 'USER');
 INSERT INTO nip_role (id, role) VALUES (3, 'APPROVER');
 
-INSERT INTO nip_user (NAME, PASSWORD, ROLE) VALUES ('cez', 'cez', 'role_admin');
+INSERT INTO nip_user (NAME, PASSWORD, ROLE, ENABLED) VALUES ('cez', 'cez', 'role_admin' , 1);

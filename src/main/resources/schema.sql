@@ -23,6 +23,7 @@ CREATE TABLE nip_user (
   name     VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
   role     VARCHAR(255) NOT NULL,
+  enabled  NUMBER(1,0)  NOT NULL,
   CONSTRAINT nip_user_pk PRIMARY KEY (id),
   CONSTRAINT nip_name_uniq UNIQUE (name)
 );
