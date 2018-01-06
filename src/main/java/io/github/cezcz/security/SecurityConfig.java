@@ -47,7 +47,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .anyRequest()
                 .authenticated()
                 .and()
-                .formLogin() // TODO musi byc np basic
+                .formLogin()
+                .defaultSuccessUrl("/")
                 .loginProcessingUrl("/login")
                 .permitAll()
                 .and()
