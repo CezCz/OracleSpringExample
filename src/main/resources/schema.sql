@@ -23,7 +23,7 @@ CREATE TABLE nip_user (
   name     VARCHAR(255) NOT NULL,
   password VARCHAR(255) NOT NULL,
   role     VARCHAR(255) NOT NULL,
-  enabled  NUMBER(1,0)  NOT NULL,
+  enabled  NUMBER(1, 0) NOT NULL,
   CONSTRAINT nip_user_pk PRIMARY KEY (id),
   CONSTRAINT nip_name_uniq UNIQUE (name)
 );
@@ -115,34 +115,34 @@ WHEN (NEW.id IS NULL OR NEW.id = 0)
   END;
 /
 
-CREATE OR REPLACE TRIGGER nip_sqdc_gen_tr
+CREATE OR REPLACE TRIGGER nip_drop_sqdc_gen_tr
 AFTER INSERT
   ON nip
 FOR EACH ROW
 WHEN (NEW.state_id = 1)
   BEGIN
     DELETE FROM sdqc
-    WHERE sdqc.nip_id = NEW.id;
+    WHERE sdqc.nip_id = :NEW.id;
   END;
 /
 
-CREATE OR REPLACE TRIGGER nip_sqdc_gen_tr
-AFTER INSERT
+CREATE OR REPLACE TRIGGER nip_create_sqdc_gen_tr
+AFTER UPDATE
   ON nip
 FOR EACH ROW
 WHEN (NEW.state_id = 4)
   DECLARE
-    sdqc_date DATE := NEW.start_date;
+    sdqc_date DATE := :NEW.start_date;
   BEGIN
-    WHILE sdqc_date <= NEW.end_date
+    WHILE sdqc_date <= :NEW.end_date
     LOOP
-      sdqc_date = sdqc_date + :NEW.sdqc_frequency;
-      INSERT INTO sdqc (nip_id, due_date) VALUES (NEW.id, sdqc_date);
+      sdqc_date := sdqc_date + :NEW.sdqc_frequency;
+      INSERT INTO sdqc (nip_id, due_date) VALUES (:NEW.id, sdqc_date);
     END LOOP;
 
-    IF sdqc_date != NEW.end_date
+    IF sdqc_date != :NEW.end_date
     THEN
-      INSERT INTO sdqc (nip_id, due_date) VALUES (new.id, NEW.end_date);
+      INSERT INTO sdqc (nip_id, due_date) VALUES (:NEW.id, :NEW.end_date);
     END IF;
   END;
 /
@@ -446,17 +446,17 @@ INSTEAD OF INSERT
     INTO current_date
     FROM dual;
 
-    IF NEW.sdqc_id IS NULL
+    IF :NEW.sdqc_id IS NULL
     THEN
       raise_application_error(-20001, 'No sdqc_id provided on sdqc document submission.');
     END IF;
 
-    IF NEW.document_path IS NULL
+    IF :NEW.document_path IS NULL
     THEN
       raise_application_error(-20001, 'No document provided on sdqc document submission.');
     END IF;
 
-    IF NEW.performed_by IS NULL
+    IF :NEW.performed_by IS NULL
     THEN
       raise_application_error(-20001, 'No user performing this sdqc was provided.');
     END IF;
@@ -464,7 +464,7 @@ INSTEAD OF INSERT
     SELECT count(1)
     INTO does_nip_exist
     FROM nip
-    WHERE nip.id = new.id;
+    WHERE nip.id = :NEW.id;
 
     IF does_nip_exist = 0
     THEN
@@ -474,7 +474,7 @@ INSTEAD OF INSERT
     SELECT count(1)
     INTO does_sdqc_exist
     FROM sdqc
-    WHERE sdqc.id = new.sdqc_id;
+    WHERE sdqc.id = :NEW.sdqc_id;
 
     IF does_sdqc_exist = 0
     THEN
@@ -484,7 +484,7 @@ INSTEAD OF INSERT
     SELECT count(1)
     INTO is_already_performed
     FROM sdqc
-    WHERE sdqc.id = NEW.sdqc_id AND sdqc.date_performed IS NOT NULL;
+    WHERE sdqc.id = :NEW.sdqc_id AND sdqc.date_performed IS NOT NULL;
 
     IF is_already_performed = 1
     THEN
@@ -494,7 +494,7 @@ INSTEAD OF INSERT
     SELECT count(1)
     INTO can_user_update
     FROM nip_role_user
-    WHERE nip_role_user.id = NEW.id AND nip_role_user.role_id IN (1, 2);
+    WHERE nip_role_user.id = :NEW.id AND nip_role_user.role_id IN (1, 2);
 
     IF can_user_update = 0
     THEN
@@ -503,7 +503,7 @@ INSTEAD OF INSERT
 
     UPDATE SDQC
     SET
-      performed_by = NEW.performed_by, date_performed = current_date, document_path = NEW.document_path
-    WHERE sdqc.id = NEW.sdqc_id;
+      performed_by = :NEW.performed_by, date_performed = current_date, document_path = :NEW.document_path
+    WHERE sdqc.id = :NEW.sdqc_id;
   END;
 /
