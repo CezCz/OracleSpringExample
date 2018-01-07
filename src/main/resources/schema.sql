@@ -4,7 +4,7 @@ CREATE TABLE nip_state (
   CONSTRAINT nip_state_pk PRIMARY KEY (id)
 );
 
-CREATE SEQUENCE nip_state_seq START WITH 100 INCREMENT BY 1;
+CREATE SEQUENCE nip_state_seq START WITH 99 INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER nip_state_tr
 BEFORE INSERT
@@ -28,7 +28,7 @@ CREATE TABLE nip_user (
   CONSTRAINT nip_name_uniq UNIQUE (name)
 );
 
-CREATE SEQUENCE nip_user_seq START WITH 100 INCREMENT BY 1;
+CREATE SEQUENCE nip_user_seq START WITH 99 INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER nip_seq_tr
 BEFORE INSERT
@@ -49,7 +49,7 @@ CREATE TABLE nip_role (
   CONSTRAINT role_role_uniq UNIQUE (role)
 );
 
-CREATE SEQUENCE nip_role_seq START WITH 100 INCREMENT BY 1;
+CREATE SEQUENCE nip_role_seq START WITH 99 INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER role_seq_tr
 BEFORE INSERT
@@ -75,7 +75,7 @@ CREATE TABLE nip (
   CONSTRAINT compliant_nip_date_check CHECK ((start_date + sdqc_frequency) <= end_date )
 );
 
-CREATE SEQUENCE nip_seq START WITH 100 INCREMENT BY 1;
+CREATE SEQUENCE nip_seq START WITH 99 INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER nip_tr
 BEFORE INSERT
@@ -101,7 +101,7 @@ CREATE TABLE sdqc (
   CONSTRAINT performed_by_fk FOREIGN KEY (performed_by) REFERENCES nip_user (id)
 );
 
-CREATE SEQUENCE sdqc_seq START WITH 100 INCREMENT BY 1;
+CREATE SEQUENCE sdqc_seq START WITH 99 INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER sdqc_tr
 BEFORE INSERT
@@ -158,7 +158,7 @@ CREATE TABLE nip_role_user (
   CONSTRAINT nip_role_user_user_id_fk FOREIGN KEY (user_id) REFERENCES nip_user (ID)
 );
 
-CREATE SEQUENCE nip_role_user_seq START WITH 100 INCREMENT BY 1;
+CREATE SEQUENCE nip_role_user_seq START WITH 99 INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER nip_role_user_tr
 BEFORE INSERT
@@ -186,7 +186,7 @@ CREATE TABLE nip_audit_trial (
   CONSTRAINT nip_audit_trial_px PRIMARY KEY (ID)
 );
 
-CREATE SEQUENCE nip_audit_trial_seq START WITH 100 INCREMENT BY 1;
+CREATE SEQUENCE nip_audit_trial_seq START WITH 99 INCREMENT BY 1;
 
 CREATE OR REPLACE TRIGGER nip_audit_trial_tr
 BEFORE INSERT
@@ -206,25 +206,41 @@ CREATE OR REPLACE PROCEDURE INSERT_INTO_NIP(nip_name_p       IN VARCHAR, --- Cre
                                             sdqc_frequency_p IN INTERVAL DAY TO SECOND,
                                             nip_user_p       IN NUMBER)
 IS
-  current_date DATE;
-  draft_state  NUMBER := 1;
-  admin        NUMBER := 1;
-  nip_id_p     NUMBER;
+  curr_date   DATE;
+  draft_state NUMBER := 1;
+  admin       NUMBER := 1;
+  nip_id_p    NUMBER;
+  uname       VARCHAR(255);
+  role_name   VARCHAR(255);
+
   BEGIN
     SELECT sysdate
-    INTO current_date
+    INTO curr_date
     FROM dual;
 
     SELECT nip_seq.NEXTVAL
     INTO nip_id_p
     FROM dual;
 
-    INSERT INTO nip_audit_trial (nip_id, nip_name, start_date, end_date, sdqc_frequency, state_id, action_date, nip_user, nip_role)
-    VALUES (nip_id_p, nip_name_p, start_date_p, end_date_p, sdqc_frequency_p, draft_state, current_date, nip_user_p,
-            admin);
+    SELECT nip_user.name
+    INTO uname
+    FROM nip_user
+    WHERE id = nip_user_p;
+
+    SELECT nip_role.role
+    INTO role_name
+    FROM nip_role
+    WHERE nip_role.id = admin;
 
     INSERT INTO nip (id, nip_name, start_date, end_date, sdqc_frequency, state_id)
     VALUES (nip_id_p, nip_name_p, start_date_p, end_date_p, sdqc_frequency_p, draft_state);
+
+    INSERT INTO user_role_nips (nip_id, nip_name, name, user_role) VALUES (nip_id_p, nip_name_p, uname, role_name);
+
+    INSERT INTO nip_audit_trial (nip_id, nip_name, start_date, end_date, sdqc_frequency, state_id, action_date, nip_user, nip_role)
+    VALUES (nip_id_p, nip_name_p, start_date_p, end_date_p, sdqc_frequency_p, draft_state, curr_date, nip_user_p,
+            admin);
+
   END;
 /
 
@@ -387,7 +403,7 @@ CREATE OR REPLACE VIEW overdue_sdqc AS
 
 -- view nip role user with insert of user/role into nip
 
-CREATE OR REPLACE VIEW user_role_nips (nip_id, nip_name, username, user_role) AS
+CREATE OR REPLACE VIEW user_role_nips (nip_id, nip_name, name, user_role) AS
   SELECT
     nip.id,
     nip.nip_name,
@@ -405,15 +421,15 @@ INSTEAD OF INSERT
     user_id NUMBER;
     role_id NUMBER;
   BEGIN
-    SELECT id
+    SELECT NIP_ROLE.id
     INTO role_id
     FROM NIP_ROLE
     WHERE NIP_ROLE.role = :NEW.user_role;
 
-    SELECT id
+    SELECT NIP_USER.id
     INTO user_id
     FROM NIP_USER
-    WHERE NIP_USER.name = :NEW.username;
+    WHERE NIP_USER.name = :NEW.name;
 
     INSERT INTO NIP_ROLE_USER (nip_id, role_id, user_id) VALUES (:NEW.nip_id, role_id, user_id);
   END;
